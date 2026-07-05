@@ -16,23 +16,44 @@ gsap.registerPlugin(ScrollTrigger);
 
 function App() {
   const [currentChapter, setCurrentChapter] = useState(0);
-  const totalChapters = 10; // 0 to 10 is 11 chapters actually, but user said Chapter 0 - Chapter 10
+  const totalChapters = resumeData.projects.length + 4; // Dynamic count matching index 0 to length+4
 
   useEffect(() => {
-    // Setup ScrollTriggers for each chapter to update the currentChapter state
-    const chapters = gsap.utils.toArray('.chapter-section');
-    chapters.forEach((chapter: any, i) => {
-      ScrollTrigger.create({
-        trigger: chapter,
-        start: 'top center',
-        end: 'bottom center',
-        onToggle: self => {
-          if (self.isActive) setCurrentChapter(i);
+    const timer = setTimeout(() => {
+      const chapters = gsap.utils.toArray('.chapter-section');
+      
+      // Setup ScrollTriggers for each chapter
+      chapters.forEach((chapter: any, i) => {
+        ScrollTrigger.create({
+          trigger: chapter,
+          start: 'top center',
+          end: 'bottom center',
+          onToggle: self => {
+            if (self.isActive) setCurrentChapter(i);
+          }
+        });
+      });
+
+      // Calculate initial active chapter based on scroll position
+      const scrollY = window.scrollY;
+      const centerY = scrollY + window.innerHeight / 2;
+      let initialActive = 0;
+
+      chapters.forEach((chapter: any, i) => {
+        const rect = chapter.getBoundingClientRect();
+        const top = rect.top + scrollY;
+        const bottom = rect.bottom + scrollY;
+        if (centerY >= top && centerY <= bottom) {
+          initialActive = i;
         }
       });
-    });
+
+      setCurrentChapter(initialActive);
+      ScrollTrigger.refresh();
+    }, 150);
 
     return () => {
+      clearTimeout(timer);
       ScrollTrigger.getAll().forEach(t => t.kill());
     };
   }, []);
